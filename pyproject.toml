@@ -1,0 +1,18 @@
+[project]
+name = "heygen-pipecat"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "daily-python>=0.14.2",
+    "livekit>=0.19.1",
+    "pipecat-ai>=0.0.55",
+    "pydantic>=2.10.6",
+    "pydantic-settings>=2.7.1",
+    "python-dotenv>=1.0.1",
+    "websockets>=14.2",
+    "openai>=1.61.1",
+    "onnxruntime>=1.20.1",
+    "deepgram-sdk>=3.9.0",
+]
