@@ -1,5 +1,7 @@
 # Heygen Dailyco Pipecat Example
 
+Prototype integrating a [Heygen](https://heygen.com/) live-streaming avatar with [dailyco](https://www.daily.co/) for real-time video communication, powered by [pipecat](https://github.com/pipecat-ai/pipecat) for AI-driven media routing. The setup works well, successfully streaming the avatar feed, though there is a noticeable slow-motion, I will seek help from Heygen using this repository.
+
 ## Setup
 
 ```bash
