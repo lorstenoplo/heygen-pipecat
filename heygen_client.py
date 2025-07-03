@@ -45,7 +45,7 @@ class NewSessionRequest(BaseModel):
     knowledgeBase: Optional[str] = None
     voice: Optional[VoiceSettings] = None
     language: Optional[str] = None
-    version: Literal["v2"] = "v2"
+    version: Literal["v2"] | Literal["v1"] = "v2" 
     video_encoding: Literal["H264"] = "H264"
     source: Literal["sdk"] = "sdk"
     disableIdleTimeout: Optional[bool] = None
@@ -117,14 +117,15 @@ class HeyGenClient:
             "knowledge_base_id": request_data.knowledgeId,
             "knowledge_base": request_data.knowledgeBase,
             "voice": {
-                "voice_id": request_data.voice.voiceId if request_data.voice else None,
-                "rate": request_data.voice.rate if request_data.voice else None,
-                "emotion": request_data.voice.emotion if request_data.voice else None,
-                "elevenlabs_settings": (
-                    request_data.voice.elevenlabsSettings
-                    if request_data.voice
-                    else None
-                ),
+                "voice_id": request_data.voice.voice_id if request_data.voice else None,
+                "rate": 1,
+                "emotion": VoiceEmotion.EXCITED,
+                "elevenlabs_settings": {
+                    "similarity_boost": 0.7,
+                    "stability": 0.9,
+                    "style": 0.5,
+                    "use_speaker_boost": True,
+                },
             },
             "language": request_data.language,
             "version": "v2",
@@ -151,6 +152,25 @@ class HeyGenClient:
             "session_id": session_id,
         }
         return await self.request("/streaming.start", params)
+    
+    # stop session
+    async def stop_session(self, session_id: str) -> Any:
+        """
+        Stop the streaming session.
+
+        Args:
+            session_id (str): The ID of the session to stop.
+
+        Returns:
+            Any: Response data from the stop session API call.
+        """
+        if not session_id:
+            raise ValueError("Session ID is not set. Call new_session first.")
+
+        params = {
+            "session_id": session_id,
+        }
+        return await self.request("/streaming.stop", params)
 
     async def close(self) -> None:
         """Close the aiohttp session."""

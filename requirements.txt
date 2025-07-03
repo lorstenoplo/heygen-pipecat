@@ -1,0 +1,16 @@
+# Core dependencies
+daily-python>=0.14.2
+livekit>=0.19.1
+
+# Pipecat with extras - install with: pip install "pipecat-ai[webrtc,deepgram,openai,elevenlabs]"
+pipecat-ai[deepgram,openai,elevenlabs,websocket,daily]>=0.0.55
+
+# Pydantic
+pydantic>=2.10.6
+pydantic-settings>=2.7.1
+
+# Environment and networking
+python-dotenv>=1.0.1
+
+# AI/ML services
+onnxruntime>=1.20.1

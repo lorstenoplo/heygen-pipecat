@@ -4,11 +4,12 @@ import json
 import uuid
 
 import aiohttp
+import numpy as np
 import websockets
 from livekit import rtc
 from livekit.rtc._proto.video_frame_pb2 import VideoBufferType
 from loguru import logger
-from pipecat.audio.utils import resample_audio
+from scipy import signal
 from pipecat.frames.frames import (
     CancelFrame,
     EndFrame,
@@ -19,6 +20,8 @@ from pipecat.frames.frames import (
     TTSAudioRawFrame,
     TTSStartedFrame,
     TTSStoppedFrame,
+    UserStartedSpeakingFrame,
+    UserStoppedSpeakingFrame,
 )
 from pipecat.processors.frame_processor import FrameDirection
 from pipecat.services.ai_services import AIService
@@ -106,7 +109,7 @@ class HeyGenVideoService(AIService):
         """Handle incoming messages from HeyGen websocket"""
         try:
             while True:
-                message = await self._websocket.recv()
+                message = await self._websocket.recv() # type: ignore
                 try:
                     parsed_message = json.loads(message)
                     await self._handle_ws_server_event(parsed_message)
@@ -122,10 +125,42 @@ class HeyGenVideoService(AIService):
     async def _handle_ws_server_event(self, event: dict) -> None:
         """Handle an event from HeyGen websocket"""
         event_type = event.get("type")
+        
         if event_type == "agent.status":
             logger.info(f"HeyGenVideoService ws received agent status: {event}")
+        elif event_type == "agent.state":
+            # Handle agent state changes - this is the missing handler!
+            logger.info(f"HeyGenVideoService ws received agent state: {event}")
+        
+        # Check if this is a state change that affects video display
+        state = event.get("state")
+        if state == "listening":
+            # Agent is ready to receive audio
+            self._video_event.set()  # Enable video processing
+        elif state == "speaking":
+            # Agent is generating response
+            logger.info("Agent is speaking - avatar should be visible")
+        elif state == "idle":
+            # Agent is idle
+            logger.info("Agent is idle")
+            self._video_event.clear()  # Disable video processing
+        elif event_type == "session.created":
+            logger.info(f"HeyGenVideoService session created: {event}")
+        elif event_type == "session.closed":
+            logger.info(f"HeyGenVideoService session closed: {event}")
+        elif event_type == "avatar.start":
+            logger.info(f"HeyGenVideoService avatar started: {event}")
+            # Avatar video stream should start - ensure video processing is enabled
+            self._video_event.set()
+        elif event_type == "avatar.stop":
+            logger.info(f"HeyGenVideoService avatar stopped: {event}")
+        elif event_type == "error":
+            error_msg = event.get("message", "Unknown error")
+            logger.error(f"HeyGenVideoService received error: {error_msg}")
+            await self.push_error(ErrorFrame(error=f"HeyGen error: {error_msg}", fatal=True))
         else:
-            logger.error(f"HeyGenVideoService ws received unknown event: {event_type}")
+            logger.warning(f"HeyGenVideoService ws received unknown event: {event_type}")
+            logger.debug(f"Full unknown event: {event}")  # Log full event for debugging
 
     async def _ws_send(self, message: dict) -> None:
         """Send a message to HeyGen websocket"""
@@ -140,6 +175,26 @@ class HeyGenVideoService(AIService):
             await self.push_error(
                 ErrorFrame(error=f"Error sending client event: {e}", fatal=True)
             )
+
+    async def _interrupt(self) -> None:
+        """Interrupt the current session"""
+        await self._ws_send({
+            "type": "agent.interrupt",
+            "event_id": str(uuid.uuid4()),
+        })
+    
+    async def _start_agent_listening(self) -> None:
+        await self._ws_send({
+            "type": "agent.start_listening",
+            "event_id": str(uuid.uuid4()),
+        })
+
+    async def _stop_agent_listening(self) -> None:
+        """Stop listening animation"""
+        await self._ws_send({
+            "type": "agent.stop_listening",
+            "event_id": str(uuid.uuid4()),
+        })
 
     # heygen api methods
     async def _stop_session(self) -> None:
@@ -157,13 +212,29 @@ class HeyGenVideoService(AIService):
         body = {"session_id": self._session_id}
         async with self._session.post(url, headers=headers, json=body) as r:
             r.raise_for_status()
+    def _resample_audio(self, audio: bytes, original_sample_rate: int, target_sample_rate: int) -> bytes:
+        """Resample audio from original sample rate to target sample rate"""
+        if original_sample_rate == target_sample_rate:
+            return audio
+        
+        # Convert bytes to numpy array (assuming 16-bit audio)
+        audio_array = np.frombuffer(audio, dtype=np.int16)
+        
+        # Calculate the number of samples in the resampled audio
+        num_samples = int(len(audio_array) * target_sample_rate / original_sample_rate)
+        
+        # Resample the audio
+        resampled_audio = signal.resample(audio_array, num_samples)
+        
+        # Convert back to bytes
+        return resampled_audio.astype(np.int16).tobytes() # type: ignore
 
     # audio buffer methods
     async def _send_audio(
         self, audio: bytes, sample_rate: int, event_id: str, finish: bool = False
     ) -> None:
         try:
-            audio = resample_audio(audio, sample_rate, 24000)
+            audio = self._resample_audio(audio, sample_rate, 24000)
             self._buffered_audio_duration_ms += self._calculate_audio_duration_ms(
                 audio, 24000
             )
@@ -180,6 +251,7 @@ class HeyGenVideoService(AIService):
                 await self._agent_audio_buffer_commit(event_id)
                 self._buffered_audio_duration_ms = 0
         except Exception as e:
+            logger.error(f"Error sending audio: {e}", exc_info=True)
             logger.error(f"Error sending audio: {e}", exc_info=True)
 
     def _calculate_audio_duration_ms(self, audio: bytes, sample_rate: int) -> float:
@@ -234,9 +306,11 @@ class HeyGenVideoService(AIService):
                         sample_rate=audio_frame.sample_rate,
                         num_channels=1,  # HeyGen uses mono audio
                     )
-                    # Mark this frame as coming from LiveKit to avoid reprocessing
 
-                    await self.push_frame(audio_frame)
+                    audio_frame._from_heygen = True # type: ignore
+                    
+                    # Push downstream for Daily output
+                    await self.push_frame(audio_frame, FrameDirection.DOWNSTREAM)
 
                 except Exception as frame_error:
                     logger.error(
@@ -280,7 +354,12 @@ class HeyGenVideoService(AIService):
                         frame_event.timestamp_us // 1000
                     )  # Convert to milliseconds
 
-                    await self.push_frame(image_frame)
+                    # Log every 30th frame to verify processing
+                    if frame_count % 30 == 0:
+                        logger.info(f"Processing video frame #{frame_count}, size: {image_frame.size}")
+
+                    # Push downstream for Daily output
+                    await self.push_frame(image_frame, FrameDirection.DOWNSTREAM)
 
                 except Exception as frame_error:
                     logger.error(
@@ -421,6 +500,13 @@ class HeyGenVideoService(AIService):
             await self.cancel_task(self._audio_task)
             self._audio_task = None
 
+        # Stop heygen session
+        logger.info(f"HeyGenVideoService stopping session")
+        try:
+            await self._stop_session()
+        except Exception as e:
+            logger.error(f"Error stopping HeyGen session: {e}", exc_info=True)
+
         await self._ws_disconnect()
         await self._livekit_disconnect()
         await self._stop_session()
@@ -428,6 +514,11 @@ class HeyGenVideoService(AIService):
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
         try:
+            if isinstance(frame, UserStartedSpeakingFrame):
+                await self._interrupt()
+                await self._start_agent_listening()
+            elif isinstance(frame, UserStoppedSpeakingFrame):
+                await self._stop_agent_listening()
             if isinstance(frame, TTSStartedFrame):
                 logger.info(f"HeyGenVideoService TTS started")
                 await self.start_processing_metrics()
@@ -435,13 +526,16 @@ class HeyGenVideoService(AIService):
                 self._event_id = str(uuid.uuid4())
                 await self._agent_audio_buffer_clear()
             elif isinstance(frame, TTSAudioRawFrame):
-                await self._send_audio(
-                    frame.audio, frame.sample_rate, self._event_id, finish=False
-                )
-                await self.stop_ttfb_metrics()
+                # Only process TTS audio going TO HeyGen, not FROM HeyGen
+                if not hasattr(frame, '_from_heygen'):
+                    await self._send_audio(
+                        frame.audio, frame.sample_rate, self._event_id, finish=False # type: ignore
+                    )
+                    await self.stop_ttfb_metrics()
+                # If it's from HeyGen, don't reprocess - it's already been pushed downstream
             elif isinstance(frame, TTSStoppedFrame):
                 logger.info(f"HeyGenVideoService TTS stopped")
-                await self._send_audio(b"\x00\x00", 24000, self._event_id, finish=True)
+                await self._send_audio(b"\x00\x00", 24000, self._event_id, finish=True) # type: ignore
                 await self.stop_processing_metrics()
                 self._event_id = None
             elif isinstance(frame, (EndFrame, CancelFrame)):
@@ -451,4 +545,3 @@ class HeyGenVideoService(AIService):
                 await self.push_frame(frame, direction)
         except Exception as e:
             logger.error(f"Error processing frame: {e}", exc_info=True)
-            # await self.push_frame(frame, direction)
