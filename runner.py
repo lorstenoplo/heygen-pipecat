@@ -32,7 +32,7 @@ async def configure_with_args(
             name=str(uuid.uuid4()),
             properties=DailyRoomProperties(
                 start_video_off=True,
-                start_audio_off=True,
+                start_audio_off=True, # type: ignore
                 max_participants=2,
             ),
         )

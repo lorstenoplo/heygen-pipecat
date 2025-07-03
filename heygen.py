@@ -212,6 +212,7 @@ class HeyGenVideoService(AIService):
         body = {"session_id": self._session_id}
         async with self._session.post(url, headers=headers, json=body) as r:
             r.raise_for_status()
+            
     def _resample_audio(self, audio: bytes, original_sample_rate: int, target_sample_rate: int) -> bytes:
         """Resample audio from original sample rate to target sample rate"""
         if original_sample_rate == target_sample_rate:
