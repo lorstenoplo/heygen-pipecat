@@ -3,7 +3,7 @@ daily-python>=0.14.2
 livekit>=0.19.1
 
 # Pipecat with extras - install with: pip install "pipecat-ai[webrtc,deepgram,openai,elevenlabs]"
-pipecat-ai[deepgram,openai,elevenlabs,websocket,daily]>=0.0.55
+pipecat-ai[deepgram,openai,elevenlabs,websocket,daily,moondream]>=0.0.55
 
 # Pydantic
 pydantic>=2.10.6
