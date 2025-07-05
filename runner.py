@@ -1,47 +1,56 @@
+#
+# Copyright (c) 2024–2025, Daily
+#
+# SPDX-License-Identifier: BSD 2-Clause License
+#
+
 import argparse
 import os
-import uuid
 
 import aiohttp
 
-from pipecat.transports.services.helpers.daily_rest import (
-    DailyRESTHelper,
-    DailyRoomParams,
-    DailyRoomProperties,
-)
-from config import settings
+from pipecat.transports.services.helpers.daily_rest import DailyRESTHelper
 
 
 async def configure(aiohttp_session: aiohttp.ClientSession):
-    (url, token) = await configure_with_args(aiohttp_session)
-    return (url, token)
-
-
-async def configure_with_args(
-    aiohttp_session: aiohttp.ClientSession,
-    parser: argparse.ArgumentParser | None = None,
-):
-    daily_rest_helper = DailyRESTHelper(
-        daily_api_key=settings.DAILYCO_API_KEY,
-        daily_api_url=settings.DAILYCO_BASE_URL,
-        aiohttp_session=aiohttp_session,
+    """Configure the Daily room and Daily REST helper."""
+    parser = argparse.ArgumentParser(description="Daily AI SDK Bot Sample")
+    parser.add_argument(
+        "-u", "--url", type=str, required=False, help="URL of the Daily room to join"
+    )
+    parser.add_argument(
+        "-k",
+        "--apikey",
+        type=str,
+        required=False,
+        help="Daily API Key (needed to create an owner token for the room)",
     )
 
-    room = await daily_rest_helper.create_room(
-        params=DailyRoomParams(
-            name=str(uuid.uuid4()),
-            properties=DailyRoomProperties(
-                start_video_off=True,
-                start_audio_off=True,
-                max_participants=2,
-            ),
+    args, unknown = parser.parse_known_args()
+
+    url = args.url or os.getenv("DAILY_SAMPLE_ROOM_URL")
+    key = args.apikey or os.getenv("DAILY_API_KEY")
+
+    if not url:
+        raise Exception(
+            "No Daily room specified. use the -u/--url option from the command line, or set DAILY_SAMPLE_ROOM_URL in your environment to specify a Daily room URL."
         )
+
+    if not key:
+        raise Exception(
+            "No Daily API key specified. use the -k/--apikey option from the command line, or set DAILY_API_KEY in your environment to specify a Daily API key, available from https://dashboard.daily.co/developers."
+        )
+
+    daily_rest_helper = DailyRESTHelper(
+        daily_api_key=key,
+        daily_api_url=os.getenv("DAILY_API_URL", "https://api.daily.co/v1"),
+        aiohttp_session=aiohttp_session,
     )
 
     # Create a meeting token for the given room with an expiration 1 hour in
     # the future.
     expiry_time: float = 60 * 60
 
-    token = await daily_rest_helper.get_token(room.url, expiry_time)
+    token = await daily_rest_helper.get_token(url, expiry_time)
 
-    return (room.url, token)
+    return (url, token)

@@ -7,9 +7,9 @@ load_dotenv()
 
 class AppSettings(BaseSettings):
     HEYGEN_API_KEY: str
-    DAILYCO_API_KEY: str
-    DAILYCO_BASE_URL: str
-    DAILYCO_ROOM_BASE_URL: str
+    DAILY_API_KEY: str
+    DAILY_API_URL: str
+    DAILY_API_ROOM_BASE_URL: str
     ELEVENLABS_API_KEY: str
     OPENAI_API_KEY: str
     DEEPGRAM_API_KEY: str
