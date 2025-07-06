@@ -67,7 +67,7 @@ class ServiceFactory:
         """Create Deepgram TTS service."""
         return DeepgramTTSService(
             api_key=settings.DEEPGRAM_API_KEY,
-            voice="aura-helios-en",
+            voice="aura-2-thalia-en",
             sample_rate=16000
         )
     

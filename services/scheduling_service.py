@@ -198,33 +198,54 @@ class SchedulingService:
             return b""
             
         try:
+            from icalendar import vCalAddress, vText
+            import zoneinfo
+            
             cal = Calendar()
-            cal.add('prodid', '-//HeyGen Scheduling//Appointment//EN')
+            cal.add('prodid', '-//Kreyn AI Scheduling//Appointment//EN')
             cal.add('version', '2.0')
             cal.add('calscale', 'GREGORIAN')
             
             event = iCalEvent()
             event.add('uid', booking_id)
             event.add('summary', f'{request.service_type.title()} Appointment')
-            event.add('description', f"""
-Appointment Details:
+            event.add('description', f"""Appointment Details:
 - Service: {request.service_type.title()}
 - Duration: {request.duration_minutes} minutes
 - Booking ID: {booking_id}
 
 {request.notes or 'No additional notes'}
 
-If you need to reschedule or cancel, please contact us.
+If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             """.strip())
             
-            start_time = request.to_datetime()
+            # Handle timezone properly
+            try:
+                tz = zoneinfo.ZoneInfo(request.timezone)
+            except Exception:
+                tz = zoneinfo.ZoneInfo("UTC")
+                logger.warning(f"Invalid timezone {request.timezone}, using UTC")
+            
+            start_time = request.to_datetime().replace(tzinfo=tz)
             end_time = start_time + timedelta(minutes=request.duration_minutes)
             
             event.add('dtstart', start_time)
             event.add('dtend', end_time)
+            event.add('dtstamp', datetime.now(tz=zoneinfo.ZoneInfo("UTC")))
             event.add('status', 'CONFIRMED')
-            event.add('organizer', 'noreply@heygen.com')
-            event.add('attendee', request.email)
+            
+            # Add organizer with proper format
+            organizer = vCalAddress('MAILTO:admin@kreyn.ai')
+            organizer.params['cn'] = vText('Kreyn AI')
+            organizer.params['role'] = vText('CHAIR')
+            event['organizer'] = organizer
+            
+            # Add attendee with proper format
+            attendee = vCalAddress(f'MAILTO:{request.email}')
+            attendee.params['cn'] = vText(request.email.split('@')[0])
+            attendee.params['ROLE'] = vText('REQ-PARTICIPANT')
+            attendee.params['RSVP'] = vText('TRUE')
+            event['attendee'] = attendee
             
             cal.add_component(event)
             return cal.to_ical()
@@ -242,11 +263,18 @@ If you need to reschedule or cancel, please contact us.
             # Create beautiful HTML email
             html_content = self._create_email_html(request, booking_id)
             
-            # Prepare email with calendar attachment
-            attachments = []
+            # Prepare email parameters according to resend API
+            email_params: resend.Emails.SendParams = {
+                "from": "Kreyn AI <admin@kreyn.ai>",
+                "to": [request.email],
+                "subject": f"✅ Your {request.service_type.title()} Appointment is Confirmed",
+                "html": html_content
+            }
+            
+            # Add calendar attachment if available
             if calendar_invite:
                 import base64
-                attachments = [
+                email_params["attachments"] = [
                     {
                         "filename": "appointment.ics",
                         "content": base64.b64encode(calendar_invite).decode(),
@@ -256,22 +284,12 @@ If you need to reschedule or cancel, please contact us.
             
             # Send email using resend
             try:
-                # Try sending with basic parameters first
-                email_data = {
-                    "from": "noreply@heygen.com",
-                    "to": [request.email],
-                    "subject": f"✅ Your {request.service_type.title()} Appointment is Confirmed",
-                    "html": html_content
-                }
-                
-                # Type ignore for flexible resend API usage
-                email_response = resend.Emails.send(email_data)  # type: ignore
+                email_response = resend.Emails.send(email_params)
+                logger.info(f"Confirmation email sent to {request.email}, ID: {email_response.get('id')}")
+                return {"success": True, "email_id": email_response.get('id')}
             except Exception as resend_error:
-                logger.error(f"Failed to send email: {resend_error}")
-                raise resend_error
-            
-            logger.info(f"Confirmation email sent to {request.email}, ID: {email_response.get('id')}")
-            return {"success": True, "email_id": email_response.get('id')}
+                logger.error(f"Failed to send email via Resend: {resend_error}")
+                return {"success": False, "error": str(resend_error)}
             
         except Exception as e:
             logger.error(f"Email sending failed: {e}")
@@ -346,11 +364,11 @@ If you need to reschedule or cancel, please contact us.
         <ul>
             <li>📅 <strong>Add to Calendar:</strong> Click the attached calendar file (.ics) to add this appointment to your calendar</li>
             <li>🔗 <strong>Join Link:</strong> We'll send you the meeting link 15 minutes before the appointment</li>
-            <li>📞 <strong>Need Changes?:</strong> Reply to this email or contact us to reschedule</li>
+            <li>📞 <strong>Need Changes?:</strong> Reply to this email or contact us at admin@kreyn.ai to reschedule</li>
         </ul>
         
         <div style="text-align: center;">
-            <a href="#" class="cta-button">View in Dashboard</a>
+            <a href="mailto:admin@kreyn.ai" class="cta-button">Contact Support</a>
         </div>
         
         <div style="background: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 6px; padding: 15px; margin: 20px 0;">
@@ -359,8 +377,9 @@ If you need to reschedule or cancel, please contact us.
     </div>
     
     <div class="footer">
-        <p>Thank you for choosing HeyGen!</p>
-        <p>© 2025 HeyGen. All rights reserved.</p>
+        <p>Thank you for choosing Kreyn AI!</p>
+        <p>© 2025 Kreyn AI. All rights reserved.</p>
+        <p>For support, contact us at <a href="mailto:admin@kreyn.ai">admin@kreyn.ai</a></p>
     </div>
 </body>
 </html>
