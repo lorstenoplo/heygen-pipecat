@@ -1,11 +1,12 @@
 """
-Pipeline configuration and setup.
+Pipeline configuration and setup with integrated message service.
 """
 
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.task import PipelineParams, PipelineTask
 from pipecat.processors.frameworks.rtvi import RTVIObserver
 from services.pipeline_manager import PipelineManager
+from services.message_service import get_message_service
 from actions.rtvi_actions import create_rtvi_actions
 
 
@@ -59,8 +60,12 @@ class PipelineConfig:
     
     @staticmethod
     def setup_pipeline_manager(rtvi_processor, task, context_aggregator):
-        """Setup the global pipeline manager."""
+        """Setup the global pipeline manager and message service."""
         pipeline_manager = PipelineManager.get_instance()
         pipeline_manager.set_rtvi_processor(rtvi_processor)
         pipeline_manager.set_task(task)
         pipeline_manager.set_context_aggregator(context_aggregator)
+        
+        # Initialize message service with RTVI processor
+        message_service = get_message_service()
+        message_service.set_rtvi_processor(rtvi_processor)

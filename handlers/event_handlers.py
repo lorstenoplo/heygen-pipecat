@@ -1,13 +1,13 @@
 """
-Event handlers for transport and pipeline events.
+Event handlers for transport and pipeline events using standardized messaging.
 """
 
 import asyncio
 from loguru import logger
 from pipecat.frames.frames import LLMMessagesAppendFrame
 from services.follow_up_service import OpenAIFollowUpProcessor
-from actions.rtvi_actions import send_follow_up_questions
 from services.pipeline_manager import PipelineManager
+from services.message_service import get_message_service
 
 
 class EventHandlers:
@@ -16,6 +16,7 @@ class EventHandlers:
     def __init__(self, follow_up_processor: OpenAIFollowUpProcessor):
         self.follow_up_processor = follow_up_processor
         self.pipeline_manager = PipelineManager.get_instance()
+        self.message_service = get_message_service()
     
     async def on_client_connected(self, transport, client):
         """Handle client connection."""
@@ -87,8 +88,14 @@ class EventHandlers:
         """Generate follow-ups with proper delay to avoid timing issues."""
         try:
             questions = await self.follow_up_processor.generate_follow_ups(assistant_response)
+            
+            # Set RTVI processor for message service
             rtvi_processor = self.pipeline_manager.get_rtvi_processor()
-            await send_follow_up_questions(questions, rtvi_processor)
+            if rtvi_processor:
+                self.message_service.set_rtvi_processor(rtvi_processor)
+            
+            # Send follow-up questions using the message service
+            await self.message_service.send_follow_up_questions(questions)
         except Exception as e:
             logger.error(f"Error in delayed follow-up generation: {e}")
 

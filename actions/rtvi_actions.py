@@ -1,15 +1,15 @@
 """
-RTVI action handlers for the conversational AI pipeline.
+RTVI action handlers for the conversational AI pipeline using standardized messaging.
 """
 
 from loguru import logger
-from datetime import datetime
+from typing import List
 from pipecat.frames.frames import LLMMessagesAppendFrame
 from pipecat.processors.frameworks.rtvi import (
     RTVIAction,
     RTVIActionArgument,
-    RTVIServerMessageFrame,
 )
+from ..services.message_service import get_message_service
 
 
 async def handle_append_messages(processor, service, arguments):
@@ -35,23 +35,16 @@ async def handle_append_messages(processor, service, arguments):
         return False
 
 
-async def send_follow_up_questions(questions: list, rtvi_processor):
-    """Send follow-up questions to the UI - DELAYED to avoid timing issues."""
-    if rtvi_processor and questions:
-        try:            
-            frame = RTVIServerMessageFrame(
-                data={
-                    "type": "ui_update_follow_up",
-                    "payload": {
-                        "questions": questions,
-                        "timestamp": datetime.now().isoformat(),
-                    },
-                }
-            )
-            await rtvi_processor.push_frame(frame)
-            logger.debug(f"Sent follow-up questions: {questions}")
-        except Exception as e:
-            logger.error(f"Error sending follow-up questions: {e}")
+async def send_follow_up_questions(questions: List[str], rtvi_processor=None) -> bool:
+    """Send follow-up questions to the UI using the message service."""
+    message_service = get_message_service()
+    
+    # Set the RTVI processor if provided
+    if rtvi_processor:
+        message_service.set_rtvi_processor(rtvi_processor)
+    
+    # Send follow-up questions using the standardized message protocol
+    return await message_service.send_follow_up_questions(questions)
 
 
 def create_rtvi_actions():
