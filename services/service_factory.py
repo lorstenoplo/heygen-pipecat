@@ -68,7 +68,7 @@ class ServiceFactory:
         return DeepgramTTSService(
             api_key=settings.DEEPGRAM_API_KEY,
             voice="aura-2-thalia-en",
-            sample_rate=16000
+            sample_rate=24000
         )
     
     @staticmethod

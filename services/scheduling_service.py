@@ -178,16 +178,6 @@ class SchedulingService:
     
     async def _check_availability(self, request: SchedulingRequest) -> Dict[str, Any]:
         """Check if the requested time slot is available (mock implementation)"""
-        # In a real implementation, this would check against a calendar system
-        appointment_time = request.to_datetime()
-        
-        # Mock business hours check (9 AM to 5 PM)
-        if appointment_time.hour < 9 or appointment_time.hour >= 17:
-            return {"available": False, "reason": "Outside business hours (9 AM - 5 PM)"}
-        
-        # Mock weekend check
-        if appointment_time.weekday() >= 5:  # Saturday = 5, Sunday = 6
-            return {"available": False, "reason": "Weekends not available"}
         
         return {"available": True}
     
