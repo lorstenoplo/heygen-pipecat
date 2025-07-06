@@ -8,7 +8,7 @@ from heygen import HeyGenVideoService
 from heygen_client import AvatarQuality, HeyGenClient, NewSessionRequest
 from pipecat.services.openai import OpenAILLMService
 from pipecat.services.elevenlabs import ElevenLabsTTSService
-from pipecat.services.deepgram import DeepgramSTTService, LiveOptions
+from pipecat.services.deepgram import DeepgramSTTService, LiveOptions, DeepgramTTSService
 from pipecat.processors.aggregators.openai_llm_context import OpenAILLMContext
 from pipecat.processors.frameworks.rtvi import RTVIConfig, RTVIProcessor
 from pipecat.processors.transcript_processor import TranscriptProcessor
@@ -53,32 +53,111 @@ class ServiceFactory:
             live_options=LiveOptions(language="en-US"),
         )
     
+    # @staticmethod
+    # def create_tts_service() -> ElevenLabsTTSService:
+    #     """Create ElevenLabs TTS service."""
+    #     return ElevenLabsTTSService(
+    #         api_key=settings.ELEVENLABS_API_KEY, 
+    #         voice_id="21m00Tcm4TlvDq8ikWAM"
+    #     )
+
+    # Use deepgram TTS for now
     @staticmethod
-    def create_tts_service() -> ElevenLabsTTSService:
-        """Create ElevenLabs TTS service."""
-        return ElevenLabsTTSService(
-            api_key=settings.ELEVENLABS_API_KEY, 
-            voice_id="21m00Tcm4TlvDq8ikWAM"
+    def create_tts_service() -> DeepgramTTSService:
+        """Create Deepgram TTS service."""
+        return DeepgramTTSService(
+            api_key=settings.DEEPGRAM_API_KEY,
+            voice="aura-helios-en",
+            sample_rate=16000
         )
     
     @staticmethod
     def create_llm_service() -> OpenAILLMService:
-        """Create OpenAI LLM service with vision support."""
-        return OpenAILLMService(
+        """Create OpenAI LLM service with vision support."""        
+        llm = OpenAILLMService(
             api_key=os.getenv("OPENAI_API_KEY"), 
-            model="gpt-4o"
+            model="gpt-4o",
         )
+        
+        # Register scheduling functions
+        from tools.scheduling_tools import show_scheduling_popup, check_availability, get_available_slots
+        llm.register_function("show_scheduling_popup", show_scheduling_popup)
+        llm.register_function("check_availability", check_availability)
+        llm.register_function("get_available_slots", get_available_slots)
+        
+        return llm
     
     @staticmethod
     def create_llm_context() -> OpenAILLMContext:
-        """Create LLM context with system prompt."""
+        """Create LLM context with system prompt and tools."""
+        from pipecat.adapters.schemas.function_schema import FunctionSchema
+        from pipecat.adapters.schemas.tools_schema import ToolsSchema
+        
+        # Define scheduling tools schema
+        show_popup_function = FunctionSchema(
+            name="show_scheduling_popup",
+            description="MAIN SCHEDULING TOOL: Display a scheduling popup when user wants to book an appointment. This opens a UI form where the user will enter their email, date, and time. DO NOT ask for date/time/email through conversation - just call this tool.",
+            properties={
+                "service_type": {
+                    "type": "string",
+                    "enum": ["consultation", "demo", "onboarding", "support", "training"],
+                    "description": "Type of service to schedule"
+                },
+                "context": {
+                    "type": "string",
+                    "description": "Additional context about what's being scheduled"
+                }
+            },
+            required=["service_type"]
+        )
+        
+        check_availability_function = FunctionSchema(
+            name="check_availability",
+            description="Check if a specific date and time slot is available. Only use if user specifically asks about a particular time slot.",
+            properties={
+                "date": {
+                    "type": "string",
+                    "description": "Date in YYYY-MM-DD format"
+                },
+                "time": {
+                    "type": "string",
+                    "description": "Time in HH:MM format (24-hour)"
+                },
+                "service_type": {
+                    "type": "string",
+                    "enum": ["consultation", "demo", "onboarding", "support", "training"],
+                    "description": "Type of service"
+                }
+            },
+            required=["date", "time"]
+        )
+        
+        get_slots_function = FunctionSchema(
+            name="get_available_slots", 
+            description="Get all available time slots for a specific date. Only use if user specifically asks for available times on a particular date.",
+            properties={
+                "date": {
+                    "type": "string",
+                    "description": "Date in YYYY-MM-DD format"
+                },
+                "service_type": {
+                    "type": "string",
+                    "enum": ["consultation", "demo", "onboarding", "support", "training"],
+                    "description": "Type of service"
+                }
+            },
+            required=["date"]
+        )
+        
+        tools = ToolsSchema(standard_tools=[show_popup_function, check_availability_function, get_slots_function])
+        
         messages = [
             {
                 "role": "system",
                 "content": KATYA_SYSTEM_PROMPT,
             },
         ]
-        return OpenAILLMContext(messages) # type: ignore
+        return OpenAILLMContext(messages, tools)  # type: ignore
     
     @staticmethod
     def create_rtvi_processor() -> RTVIProcessor:

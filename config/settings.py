@@ -13,6 +13,7 @@ class AppSettings(BaseSettings):
     ELEVENLABS_API_KEY: str
     OPENAI_API_KEY: str
     DEEPGRAM_API_KEY: str
+    RESEND_API_KEY: str = ""  # Optional for scheduling feature
 
     model_config = SettingsConfigDict()
 
