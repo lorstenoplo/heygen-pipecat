@@ -9,12 +9,12 @@ from pipecat.processors.frameworks.rtvi import (
     RTVIAction,
     RTVIActionArgument,
 )
-from ..services.message_service import get_message_service
+from services.message_service import get_message_service
 
 
 async def handle_append_messages(processor, service, arguments):
     """Handle appending messages to the conversation."""
-    from ..services.pipeline_manager import PipelineManager
+    from services.pipeline_manager import PipelineManager
     
     messages = arguments.get("messages", [])
     logger.info(f"Handling append_messages with {len(messages)} messages")

@@ -6,7 +6,7 @@ from typing import Optional, List, Dict, Any
 from loguru import logger
 from pipecat.processors.frameworks.rtvi import RTVIServerMessageFrame
 
-from ..messaging.protocol import (
+from messaging.protocol import (
     StandardMessage, MessageType, Priority,
     create_follow_up_questions, create_tool_call_start, create_tool_call_progress,
     create_tool_call_result, create_tool_call_error, create_process_start,
