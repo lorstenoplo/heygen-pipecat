@@ -3,7 +3,7 @@ Simple scheduling service with email and calendar integration.
 """
 
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 from dataclasses import dataclass
 import resend
@@ -228,6 +228,9 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
         appointment_time = request.to_datetime()
         formatted_date = appointment_time.strftime("%A, %B %d, %Y")
         formatted_time = appointment_time.strftime("%I:%M %p")
+        service_type = request.service_type.title()
+        timezone = request.timezone
+        duration_minutes = request.duration_minutes
         
         return f"""<!DOCTYPE html>
 <html lang="en">
@@ -283,11 +286,11 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             background: rgba(255,255,255,0.2);
             border: 2px solid rgba(255,255,255,0.3);
             border-radius: 50%;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 20px auto;
-            font-size: 28px;
+            font-size: 24px;
             color: white;
             backdrop-filter: blur(10px);
         }}
@@ -347,7 +350,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             margin: 18px 0;
             padding: 14px 0;
             border-bottom: 1px solid rgba(249,115,22,0.1);
-            gap: 16px;
+            gap: 20px;
         }}
         
         .detail-row:last-child {{
@@ -359,7 +362,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             color: #6b7280;
             font-size: 14px;
             flex-shrink: 0;
-            min-width: 80px;
+            min-width: 100px;
         }}
         
         .detail-value {{
@@ -378,6 +381,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             font-size: 13px;
             border: 1px solid rgba(249,115,22,0.2);
             word-break: break-all;
+            display: inline-block;
         }}
         
         .tips-list {{
@@ -528,7 +532,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             .success-icon {{
                 width: 48px;
                 height: 48px;
-                font-size: 24px;
+                font-size: 20px;
                 margin-bottom: 16px;
             }}
             
@@ -599,7 +603,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             }}
             
             .tips-list li .icon {{
-                margin-right: 0;
+                margin-right: 5px;
                 margin-bottom: 8px;
                 font-size: 16px;
             }}
@@ -648,7 +652,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             .success-icon {{
                 width: 44px;
                 height: 44px;
-                font-size: 22px;
+                font-size: 18px;
             }}
             
             h1 {{
@@ -685,6 +689,11 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
                 padding: 10px 20px;
                 font-size: 13px;
             }}
+
+            .tick-mark {{
+                font-size: 40px;
+                margin-bottom: 10px;
+            }}
         }}
     </style>
 </head>
@@ -692,9 +701,9 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
     <div class="container">
         <div class="header">
             <div class="header-content">
-                <div class="success-icon">✓</div>
+                <span class="tick-mark">✅</span>
                 <h1>Appointment Confirmed</h1>
-                <p class="subtitle">Your {request.service_type.title()} appointment has been successfully scheduled</p>
+                <p class="subtitle">Your {service_type} appointment has been successfully scheduled</p>
             </div>
         </div>
         
@@ -707,31 +716,35 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
                     </h3>
                     
                     <div class="detail-row">
-                        <span class="detail-label">Service</span>
-                        <span class="detail-value">{request.service_type.title()}</span>
+                        <span class="detail-label">Service: </span>
+                        <span class="detail-value">{service_type}</span>
                     </div>
                     
                     <div class="detail-row">
-                        <span class="detail-label">Date</span>
+                        <span class="detail-label">Date: </span>
                         <span class="detail-value">{formatted_date}</span>
                     </div>
                     
                     <div class="detail-row">
-                        <span class="detail-label">Time</span>
-                        <span class="detail-value">{formatted_time} ({request.timezone})</span>
+                        <span class="detail-label">Time: </span>
+                        <span class="detail-value">{formatted_time} ({timezone})</span>
                     </div>
                     
                     <div class="detail-row">
-                        <span class="detail-label">Duration</span>
-                        <span class="detail-value">{request.duration_minutes} minutes</span>
+                        <span class="detail-label">Duration: </span>
+                        <span class="detail-value">{duration_minutes} minutes</span>
                     </div>
                     
                     <div class="detail-row">
-                        <span class="detail-label">Booking ID</span>
+                        <span class="detail-label">Booking ID: </span>
                         <span class="detail-value booking-id">{booking_id}</span>
                     </div>
+
+                    <div class="detail-row">
+                        <span class="detail-label">Notes: </span>
+                        <span class="detail-value">{request.notes or 'No additional notes'}</span>
+                    </div>
                     
-                    {f'<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">{request.notes}</span></div>' if request.notes else ''}
                 </div>
             </div>
             
