@@ -54,22 +54,12 @@ class ServiceFactory:
             live_options=LiveOptions(language="en-US"),
         )
     
-    # @staticmethod
-    # def create_tts_service() -> ElevenLabsTTSService:
-    #     """Create ElevenLabs TTS service."""
-    #     return ElevenLabsTTSService(
-    #         api_key=settings.ELEVENLABS_API_KEY, 
-    #         voice_id="21m00Tcm4TlvDq8ikWAM"
-    #     )
-
-    # Use deepgram TTS for now
     @staticmethod
-    def create_tts_service() -> DeepgramTTSService:
-        """Create Deepgram TTS service."""
-        return DeepgramTTSService(
-            api_key=settings.DEEPGRAM_API_KEY,
-            voice="aura-2-thalia-en",
-            sample_rate=24000
+    def create_tts_service() -> ElevenLabsTTSService:
+        """Create ElevenLabs TTS service."""
+        return ElevenLabsTTSService(
+            api_key=settings.ELEVENLABS_API_KEY, 
+            voice_id="21m00Tcm4TlvDq8ikWAM"
         )
     
     @staticmethod

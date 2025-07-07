@@ -239,150 +239,39 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Appointment Confirmation</title>
     <style>
-        * {{
+        body {{
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
             background-color: #f8f9fa;
         }}
-        
         .container {{
             max-width: 600px;
             margin: 0 auto;
             background: #ffffff;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }}
-        
         .header {{
-            background: #2563eb;
+            background: #D97706;
             color: white;
             padding: 40px 30px;
             text-align: center;
         }}
-        
-        .check-icon {{
-            width: 60px;
-            height: 60px;
-            background: #10b981;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 24px;
-        }}
-        
-        .header h1 {{
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }}
-        
-        .header p {{
-            opacity: 0.9;
-            font-size: 16px;
-        }}
-        
         .content {{
             padding: 40px 30px;
         }}
-        
         .appointment-details {{
             background: #f8f9fa;
             border-radius: 8px;
             padding: 30px;
             margin-bottom: 30px;
         }}
-        
-        .detail-item {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #e5e7eb;
-        }}
-        
-        .detail-item:last-child {{
-            border-bottom: none;
-        }}
-        
-        .detail-label {{
-            font-weight: 500;
-            color: #6b7280;
-        }}
-        
-        .detail-value {{
-            font-weight: 600;
-            color: #111827;
-            text-align: right;
-        }}
-        
-        .booking-id {{
-            background: #e5e7eb;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 14px;
-        }}
-        
-        .next-steps {{
-            margin: 30px 0;
-        }}
-        
         .next-steps h3 {{
             font-size: 18px;
             margin-bottom: 20px;
             color: #111827;
         }}
-        
-        .step-item {{
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 16px;
-            padding: 16px;
-            background: #f8f9fa;
-            border-radius: 6px;
-        }}
-        
-        .step-icon {{
-            margin-right: 12px;
-            font-size: 18px;
-            margin-top: 2px;
-        }}
-        
-        .step-text {{
-            flex: 1;
-        }}
-        
-        .step-text strong {{
-            display: block;
-            margin-bottom: 4px;
-            color: #111827;
-        }}
-        
-        .cta-button {{
-            display: inline-block;
-            background: #2563eb;
-            color: white;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: 500;
-            margin: 20px 0;
-        }}
-        
-        .cta-button:hover {{
-            background: #1d4ed8;
-        }}
-        
         .footer {{
             background: #f8f9fa;
             padding: 30px;
@@ -390,49 +279,14 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             color: #6b7280;
             font-size: 14px;
         }}
-        
         .footer strong {{
             color: #111827;
         }}
-        
-        /* Mobile Responsive */
         @media only screen and (max-width: 600px) {{
-            .container {{
-                margin: 10px;
-                border-radius: 6px;
-            }}
-            
-            .header {{
-                padding: 30px 20px;
-            }}
-            
-            .header h1 {{
-                font-size: 20px;
-            }}
-            
             .content {{
                 padding: 30px 20px;
             }}
-            
             .appointment-details {{
-                padding: 20px;
-            }}
-            
-            .detail-item {{
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }}
-            
-            .detail-value {{
-                text-align: left;
-            }}
-            
-            .step-item {{
-                padding: 12px;
-            }}
-            
-            .footer {{
                 padding: 20px;
             }}
         }}
@@ -441,81 +295,81 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
 <body>
     <div class="container">
         <div class="header">
-            <div class="check-icon">✓</div>
-            <h1>Appointment Confirmed</h1>
-            <p>Your {service_type} appointment is all set</p>
+            <table align="center" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+                <tr>
+                    <td align="center" valign="middle" style="background: #10b981; width: 60px; height: 60px; border-radius: 50%; font-size: 28px; color: #ffffff;">✓</td>
+                </tr>
+            </table>
+            <h1 style="font-size: 24px; font-weight: 600; margin-bottom: 8px;">Appointment Confirmed</h1>
+            <p style="opacity: 0.9; font-size: 16px;">Your {service_type} appointment is all set</p>
         </div>
-        
+
         <div class="content">
             <div class="appointment-details">
-                <div class="detail-item">
-                    <span class="detail-label">Service</span>
-                    <span class="detail-value">{service_type}</span>
-                </div>
-                
-                <div class="detail-item">
-                    <span class="detail-label">Date</span>
-                    <span class="detail-value">{formatted_date}</span>
-                </div>
-                
-                <div class="detail-item">
-                    <span class="detail-label">Time</span>
-                    <span class="detail-value">{formatted_time} ({timezone})</span>
-                </div>
-                
-                <div class="detail-item">
-                    <span class="detail-label">Duration</span>
-                    <span class="detail-value">{duration_minutes} minutes</span>
-                </div>
-                
-                <div class="detail-item">
-                    <span class="detail-label">Booking ID</span>
-                    <span class="detail-value booking-id">{booking_id}</span>
-                </div>
-                
-                <div class="detail-item">
-                    <span class="detail-label">Notes</span>
-                    <span class="detail-value">{request.notes or 'None'}</span>
-                </div>
+                <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 16px; color: #111827;">
+                    <tr>
+                        <td style="padding: 12px 0; font-weight: 500; color: #6b7280;">Service</td>
+                        <td align="right" style="padding: 12px 0; font-weight: 600;">{service_type}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 0; font-weight: 500; color: #6b7280;">Date</td>
+                        <td align="right" style="padding: 12px 0; font-weight: 600;">{formatted_date}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 0; font-weight: 500; color: #6b7280;">Time</td>
+                        <td align="right" style="padding: 12px 0; font-weight: 600;">{formatted_time} ({timezone})</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 0; font-weight: 500; color: #6b7280;">Duration</td>
+                        <td align="right" style="padding: 12px 0; font-weight: 600;">{duration_minutes} minutes</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 0; font-weight: 500; color: #6b7280;">Booking ID</td>
+                        <td align="right" style="padding: 12px 0; font-weight: 600; background: #e5e7eb; border-radius: 4px; font-family: monospace;">{booking_id}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 0; font-weight: 500; color: #6b7280;">Notes</td>
+                        <td align="right" style="padding: 12px 0; font-weight: 600;">{request.notes or 'None'}</td>
+                    </tr>
+                </table>
             </div>
-            
+
             <div class="next-steps">
                 <h3>What's Next?</h3>
-                
-                <div class="step-item">
-                    <span class="step-icon">📅</span>
-                    <div class="step-text">
-                        <strong>Add to Calendar</strong>
-                        Use the attached .ics file to add this appointment to your calendar
-                    </div>
-                </div>
-                
-                <div class="step-item">
-                    <span class="step-icon">🔗</span>
-                    <div class="step-text">
-                        <strong>Meeting Link</strong>
-                        You'll receive the meeting link 15 minutes before your appointment
-                    </div>
-                </div>
-                
-                <div class="step-item">
-                    <span class="step-icon">📞</span>
-                    <div class="step-text">
-                        <strong>Need Help?</strong>
-                        Contact us at admin@kreyn.ai for any changes or questions
-                    </div>
-                </div>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td valign="top" style="font-size: 18px; padding-right: 10px;">📅</td>
+                        <td style="padding-bottom: 16px;">
+                            <strong style="color: #111827;">Add to Calendar</strong><br>
+                            Use the attached .ics file to add this appointment to your calendar.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td valign="top" style="font-size: 18px; padding-right: 10px;">🔗</td>
+                        <td style="padding-bottom: 16px;">
+                            <strong style="color: #111827;">Meeting Link</strong><br>
+                            You'll receive the meeting link 15 minutes before your appointment.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td valign="top" style="font-size: 18px; padding-right: 10px;">📞</td>
+                        <td>
+                            <strong style="color: #111827;">Need Help?</strong><br>
+                            Contact us at <a href="mailto:admin@kreyn.ai" style="color: #D97706; text-decoration: none;">admin@kreyn.ai</a>
+                        </td>
+                    </tr>
+                </table>
             </div>
-            
-            <div style="text-align: center;">
-                <a href="mailto:admin@kreyn.ai" class="cta-button">Contact Support</a>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="mailto:admin@kreyn.ai" style="background: #D97706; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">Contact Support</a>
             </div>
         </div>
-        
+
         <div class="footer">
             <p><strong>Kreyn AI</strong></p>
             <p>© 2025 Kreyn AI. All rights reserved.</p>
-            <p>Need help? Email us at <a href="mailto:admin@kreyn.ai">admin@kreyn.ai</a></p>
+            <p>Need help? Email us at <a href="mailto:admin@kreyn.ai" style="color: #D97706; text-decoration: none;">admin@kreyn.ai</a></p>
         </div>
     </div>
 </body>
