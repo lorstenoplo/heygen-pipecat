@@ -239,460 +239,201 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Appointment Confirmation</title>
     <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            line-height: 1.5;
-            color: #1f2937;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background: linear-gradient(135deg, #fef3e2 0%, #fff7ed 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
         }}
         
         .container {{
+            max-width: 600px;
+            margin: 0 auto;
             background: #ffffff;
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            border: 1px solid #fed7aa;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }}
         
         .header {{
-            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-            padding: 40px 32px 32px 32px;
+            background: #2563eb;
+            color: white;
+            padding: 40px 30px;
             text-align: center;
-            position: relative;
-            overflow: hidden;
         }}
         
-        .header::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
-        }}
-        
-        .header-content {{
-            position: relative;
-            z-index: 1;
-        }}
-        
-        .success-icon {{
-            width: 56px;
-            height: 56px;
-            background: rgba(255,255,255,0.2);
-            border: 2px solid rgba(255,255,255,0.3);
+        .check-icon {{
+            width: 60px;
+            height: 60px;
+            background: #10b981;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px auto;
+            margin: 0 auto 20px;
             font-size: 24px;
-            color: white;
-            backdrop-filter: blur(10px);
+        }}
+        
+        .header h1 {{
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }}
+        
+        .header p {{
+            opacity: 0.9;
+            font-size: 16px;
         }}
         
         .content {{
-            padding: 36px 32px;
+            padding: 40px 30px;
         }}
         
-        .appointment-card {{
-            background: linear-gradient(135deg, #fefbf3 0%, #fef7ed 100%);
-            border: 1px solid #fed7aa;
+        .appointment-details {{
+            background: #f8f9fa;
             border-radius: 8px;
-            padding: 28px;
-            margin: 28px 0;
-            position: relative;
-            overflow: hidden;
+            padding: 30px;
+            margin-bottom: 30px;
         }}
         
-        .appointment-card::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, rgba(249,115,22,0.05) 0%, transparent 100%);
-            border-radius: 50%;
-            transform: translate(30px, -30px);
-        }}
-        
-        .card-content {{
-            position: relative;
-            z-index: 1;
-        }}
-        
-        .section-title {{
-            color: #111827;
-            font-size: 18px;
-            font-weight: 600;
-            margin: 0 0 20px 0;
-            display: flex;
-            align-items: center;
-        }}
-        
-        .title-accent {{
-            width: 4px;
-            height: 20px;
-            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-            border-radius: 2px;
-            margin-right: 12px;
-        }}
-        
-        .detail-row {{
+        .detail-item {{
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin: 18px 0;
-            padding: 14px 0;
-            border-bottom: 1px solid rgba(249,115,22,0.1);
-            gap: 20px;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
         }}
         
-        .detail-row:last-child {{
+        .detail-item:last-child {{
             border-bottom: none;
         }}
         
         .detail-label {{
             font-weight: 500;
             color: #6b7280;
-            font-size: 14px;
-            flex-shrink: 0;
-            min-width: 100px;
         }}
         
         .detail-value {{
-            color: #111827;
             font-weight: 600;
+            color: #111827;
             text-align: right;
-            word-break: break-word;
-            flex: 1;
         }}
         
         .booking-id {{
-            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-            background: linear-gradient(135deg, rgba(249,115,22,0.1) 0%, rgba(234,88,12,0.05) 100%);
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            border: 1px solid rgba(249,115,22,0.2);
-            word-break: break-all;
-            display: inline-block;
+            background: #e5e7eb;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
         }}
         
-        .tips-list {{
-            margin: 24px 0;
-            padding: 0;
-            list-style: none;
+        .next-steps {{
+            margin: 30px 0;
         }}
         
-        .tips-list li {{
-            margin: 16px 0;
-            padding: 16px;
+        .next-steps h3 {{
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #111827;
+        }}
+        
+        .step-item {{
             display: flex;
             align-items: flex-start;
-            font-size: 15px;
-            background: linear-gradient(135deg, rgba(17,24,39,0.02) 0%, rgba(17,24,39,0.01) 100%);
-            border-radius: 8px;
-            border-left: 3px solid #f97316;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 6px;
         }}
         
-        .tips-list li .icon {{
-            margin-right: 16px;
+        .step-icon {{
+            margin-right: 12px;
             font-size: 18px;
             margin-top: 2px;
-            flex-shrink: 0;
+        }}
+        
+        .step-text {{
+            flex: 1;
+        }}
+        
+        .step-text strong {{
+            display: block;
+            margin-bottom: 4px;
+            color: #111827;
         }}
         
         .cta-button {{
-            background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
-            color: #ffffff;
-            padding: 14px 32px;
-            text-decoration: none;
-            border-radius: 8px;
             display: inline-block;
-            font-weight: 600;
-            font-size: 15px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transition: all 0.2s ease;
-            border: 1px solid #374151;
+            background: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            margin: 20px 0;
         }}
         
         .cta-button:hover {{
-            transform: translateY(-1px);
-            box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }}
-        
-        .info-box {{
-            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-            border: 1px solid #fbbf24;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 28px 0;
-            border-left: 4px solid #f59e0b;
-            position: relative;
-            overflow: hidden;
-        }}
-        
-        .info-box::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, rgba(245,158,11,0.1) 0%, transparent 100%);
-            border-radius: 50%;
-            transform: translate(20px, -20px);
-        }}
-        
-        .info-content {{
-            position: relative;
-            z-index: 1;
+            background: #1d4ed8;
         }}
         
         .footer {{
+            background: #f8f9fa;
+            padding: 30px;
             text-align: center;
             color: #6b7280;
             font-size: 14px;
-            padding: 32px;
-            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-            position: relative;
-            overflow: hidden;
-        }}
-        
-        .footer::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, rgba(249,115,22,0.05) 0%, transparent 100%);
-        }}
-        
-        .footer-content {{
-            position: relative;
-            z-index: 1;
-        }}
-        
-        h1 {{
-            margin: 0;
-            font-size: 28px;
-            font-weight: 700;
-            color: #ffffff;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }}
-        
-        .subtitle {{
-            margin: 12px 0 0 0;
-            color: rgba(255,255,255,0.9);
-            font-size: 16px;
-            font-weight: 400;
-        }}
-        
-        a {{
-            color: #f97316;
-            text-decoration: none;
-            font-weight: 500;
-        }}
-        
-        a:hover {{
-            text-decoration: underline;
-        }}
-        
-        .footer p {{
-            margin: 6px 0;
         }}
         
         .footer strong {{
-            color: #f97316;
-            font-size: 16px;
+            color: #111827;
         }}
         
-        .footer .support-text {{
-            color: #9ca3af;
-        }}
-        
-        /* Mobile Responsive Styles */
+        /* Mobile Responsive */
         @media only screen and (max-width: 600px) {{
-            body {{
-                padding: 10px;
-                font-size: 14px;
+            .container {{
+                margin: 10px;
+                border-radius: 6px;
             }}
             
             .header {{
-                padding: 24px 16px 20px 16px;
+                padding: 30px 20px;
             }}
             
-            .success-icon {{
-                width: 48px;
-                height: 48px;
+            .header h1 {{
                 font-size: 20px;
-                margin-bottom: 16px;
-            }}
-            
-            h1 {{
-                font-size: 22px;
-                line-height: 1.3;
-            }}
-            
-            .subtitle {{
-                font-size: 14px;
-                line-height: 1.4;
             }}
             
             .content {{
-                padding: 20px 16px;
+                padding: 30px 20px;
             }}
             
-            .appointment-card {{
-                padding: 20px 16px;
-                margin: 20px 0;
+            .appointment-details {{
+                padding: 20px;
             }}
             
-            .section-title {{
-                font-size: 16px;
-                margin-bottom: 16px;
-                flex-wrap: wrap;
-            }}
-            
-            .title-accent {{
-                width: 3px;
-                height: 16px;
-                margin-right: 8px;
-            }}
-            
-            .detail-row {{
+            .detail-item {{
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 8px;
-                margin: 12px 0;
-                padding: 12px 0;
-            }}
-            
-            .detail-label {{
-                font-size: 13px;
-                margin-bottom: 4px;
-                min-width: auto;
             }}
             
             .detail-value {{
                 text-align: left;
-                font-size: 14px;
-                font-weight: 600;
-                width: 100%;
             }}
             
-            .booking-id {{
-                font-size: 12px;
-                padding: 8px 12px;
-                word-break: break-all;
-                line-height: 1.3;
-            }}
-            
-            .tips-list li {{
+            .step-item {{
                 padding: 12px;
-                font-size: 14px;
-                flex-direction: column;
-                align-items: flex-start;
-            }}
-            
-            .tips-list li .icon {{
-                margin-right: 5px;
-                margin-bottom: 8px;
-                font-size: 16px;
-            }}
-            
-            .cta-button {{
-                padding: 12px 24px;
-                font-size: 14px;
-                width: auto;
-                display: inline-block;
-            }}
-            
-            .info-box {{
-                padding: 16px;
-                margin: 20px 0;
-            }}
-            
-            .info-content {{
-                font-size: 14px;
-                line-height: 1.4;
             }}
             
             .footer {{
-                padding: 24px 16px;
-                font-size: 13px;
-            }}
-            
-            .footer strong {{
-                font-size: 14px;
-            }}
-        }}
-        
-        /* Extra small screens */
-        @media only screen and (max-width: 400px) {{
-            body {{
-                padding: 8px;
-            }}
-            
-            .container {{
-                border-radius: 8px;
-            }}
-            
-            .header {{
-                padding: 20px 12px 16px 12px;
-            }}
-            
-            .success-icon {{
-                width: 44px;
-                height: 44px;
-                font-size: 18px;
-            }}
-            
-            h1 {{
-                font-size: 20px;
-            }}
-            
-            .content {{
-                padding: 16px 12px;
-            }}
-            
-            .appointment-card {{
-                padding: 16px 12px;
-            }}
-            
-            .section-title {{
-                font-size: 15px;
-            }}
-            
-            .detail-value {{
-                font-size: 13px;
-            }}
-            
-            .booking-id {{
-                font-size: 11px;
-                padding: 6px 10px;
-            }}
-            
-            .tips-list li {{
-                padding: 10px;
-                font-size: 13px;
-            }}
-            
-            .cta-button {{
-                padding: 10px 20px;
-                font-size: 13px;
-            }}
-
-            .tick-mark {{
-                font-size: 40px;
-                margin-bottom: 10px;
+                padding: 20px;
             }}
         }}
     </style>
@@ -700,96 +441,86 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
 <body>
     <div class="container">
         <div class="header">
-            <div class="header-content">
-                <span class="tick-mark">✅</span>
-                <h1>Appointment Confirmed</h1>
-                <p class="subtitle">Your {service_type} appointment has been successfully scheduled</p>
-            </div>
+            <div class="check-icon">✓</div>
+            <h1>Appointment Confirmed</h1>
+            <p>Your {service_type} appointment is all set</p>
         </div>
         
         <div class="content">
-            <div class="appointment-card">
-                <div class="card-content">
-                    <h3 class="section-title">
-                        <span class="title-accent"></span>
-                        Appointment Details
-                    </h3>
-                    
-                    <div class="detail-row">
-                        <span class="detail-label">Service: </span>
-                        <span class="detail-value">{service_type}</span>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <span class="detail-label">Date: </span>
-                        <span class="detail-value">{formatted_date}</span>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <span class="detail-label">Time: </span>
-                        <span class="detail-value">{formatted_time} ({timezone})</span>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <span class="detail-label">Duration: </span>
-                        <span class="detail-value">{duration_minutes} minutes</span>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <span class="detail-label">Booking ID: </span>
-                        <span class="detail-value booking-id">{booking_id}</span>
-                    </div>
-
-                    <div class="detail-row">
-                        <span class="detail-label">Notes: </span>
-                        <span class="detail-value">{request.notes or 'No additional notes'}</span>
-                    </div>
-                    
+            <div class="appointment-details">
+                <div class="detail-item">
+                    <span class="detail-label">Service</span>
+                    <span class="detail-value">{service_type}</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Date</span>
+                    <span class="detail-value">{formatted_date}</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Time</span>
+                    <span class="detail-value">{formatted_time} ({timezone})</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Duration</span>
+                    <span class="detail-value">{duration_minutes} minutes</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Booking ID</span>
+                    <span class="detail-value booking-id">{booking_id}</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Notes</span>
+                    <span class="detail-value">{request.notes or 'None'}</span>
                 </div>
             </div>
             
-            <div style="margin: 32px 0;">
-                <h3 class="section-title">
-                    <span class="title-accent"></span>
-                    What's Next?
-                </h3>
-                <ul class="tips-list">
-                    <li>
-                        <span class="icon">📅</span>
-                        <div><strong>Add to Calendar:</strong> <span style="color: #4b5563;">Click the attached calendar file (.ics) to add this appointment to your calendar</span></div>
-                    </li>
-                    <li>
-                        <span class="icon">🔗</span>
-                        <div><strong>Join Link:</strong> <span style="color: #4b5563;">We'll send you the meeting link 15 minutes before the appointment</span></div>
-                    </li>
-                    <li>
-                        <span class="icon">📞</span>
-                        <div><strong>Need Changes?:</strong> <span style="color: #4b5563;">Reply to this email or contact us at admin@kreyn.ai to reschedule</span></div>
-                    </li>
-                </ul>
+            <div class="next-steps">
+                <h3>What's Next?</h3>
+                
+                <div class="step-item">
+                    <span class="step-icon">📅</span>
+                    <div class="step-text">
+                        <strong>Add to Calendar</strong>
+                        Use the attached .ics file to add this appointment to your calendar
+                    </div>
+                </div>
+                
+                <div class="step-item">
+                    <span class="step-icon">🔗</span>
+                    <div class="step-text">
+                        <strong>Meeting Link</strong>
+                        You'll receive the meeting link 15 minutes before your appointment
+                    </div>
+                </div>
+                
+                <div class="step-item">
+                    <span class="step-icon">📞</span>
+                    <div class="step-text">
+                        <strong>Need Help?</strong>
+                        Contact us at admin@kreyn.ai for any changes or questions
+                    </div>
+                </div>
             </div>
             
-            <div style="text-align: center; margin: 32px 0;">
+            <div style="text-align: center;">
                 <a href="mailto:admin@kreyn.ai" class="cta-button">Contact Support</a>
-            </div>
-            
-            <div class="info-box">
-                <div class="info-content">
-                    <strong style="color: #92400e;">💡 Pro Tip:</strong> <span style="color: #78350f;">Save this email for your records and join the meeting 5 minutes early for the best experience.</span>
-                </div>
             </div>
         </div>
         
         <div class="footer">
-            <div class="footer-content">
-                <p><strong>Thank you for choosing Kreyn AI</strong></p>
-                <p class="support-text">© 2025 Kreyn AI. All rights reserved.</p>
-                <p class="support-text">For support, contact us at <a href="mailto:admin@kreyn.ai">admin@kreyn.ai</a></p>
-            </div>
+            <p><strong>Kreyn AI</strong></p>
+            <p>© 2025 Kreyn AI. All rights reserved.</p>
+            <p>Need help? Email us at <a href="mailto:admin@kreyn.ai">admin@kreyn.ai</a></p>
         </div>
     </div>
 </body>
 </html>"""
+
 
 # Global instance
 _scheduling_service = None
