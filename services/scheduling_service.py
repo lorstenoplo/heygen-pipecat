@@ -229,8 +229,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
         formatted_date = appointment_time.strftime("%A, %B %d, %Y")
         formatted_time = appointment_time.strftime("%I:%M %p")
         
-        return f"""
-<!DOCTYPE html>
+        return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -246,7 +245,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             padding: 20px;
             background: linear-gradient(135deg, #fef3e2 0%, #fff7ed 100%);
         }}
-
+        
         .container {{
             background: #ffffff;
             border-radius: 12px;
@@ -254,7 +253,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             border: 1px solid #fed7aa;
         }}
-
+        
         .header {{
             background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
             padding: 40px 32px 32px 32px;
@@ -262,7 +261,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             position: relative;
             overflow: hidden;
         }}
-
+        
         .header::before {{
             content: '';
             position: absolute;
@@ -272,12 +271,12 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             bottom: 0;
             background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
         }}
-
+        
         .header-content {{
             position: relative;
             z-index: 1;
         }}
-
+        
         .success-icon {{
             width: 56px;
             height: 56px;
@@ -287,16 +286,16 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
+            margin: 0 auto 20px auto;
             font-size: 28px;
             color: white;
             backdrop-filter: blur(10px);
         }}
-
+        
         .content {{
             padding: 36px 32px;
         }}
-
+        
         .appointment-card {{
             background: linear-gradient(135deg, #fefbf3 0%, #fef7ed 100%);
             border: 1px solid #fed7aa;
@@ -306,7 +305,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             position: relative;
             overflow: hidden;
         }}
-
+        
         .appointment-card::before {{
             content: '';
             position: absolute;
@@ -318,12 +317,12 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             border-radius: 50%;
             transform: translate(30px, -30px);
         }}
-
+        
         .card-content {{
             position: relative;
             z-index: 1;
         }}
-
+        
         .section-title {{
             color: #111827;
             font-size: 18px;
@@ -332,7 +331,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             display: flex;
             align-items: center;
         }}
-
+        
         .title-accent {{
             width: 4px;
             height: 20px;
@@ -340,30 +339,35 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             border-radius: 2px;
             margin-right: 12px;
         }}
-
+        
         .detail-row {{
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin: 18px 0;
             padding: 14px 0;
             border-bottom: 1px solid rgba(249,115,22,0.1);
+            gap: 16px;
         }}
-
+        
         .detail-row:last-child {{
             border-bottom: none;
         }}
-
+        
         .detail-label {{
             font-weight: 500;
             color: #6b7280;
             font-size: 14px;
+            flex-shrink: 0;
+            min-width: 80px;
         }}
         
         .detail-value {{
             color: #111827;
             font-weight: 600;
             text-align: right;
+            word-break: break-word;
+            flex: 1;
         }}
         
         .booking-id {{
@@ -373,6 +377,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             border-radius: 6px;
             font-size: 13px;
             border: 1px solid rgba(249,115,22,0.2);
+            word-break: break-all;
         }}
         
         .tips-list {{
@@ -396,6 +401,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
             margin-right: 16px;
             font-size: 18px;
             margin-top: 2px;
+            flex-shrink: 0;
         }}
         
         .cta-button {{
@@ -507,6 +513,179 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
         .footer .support-text {{
             color: #9ca3af;
         }}
+        
+        /* Mobile Responsive Styles */
+        @media only screen and (max-width: 600px) {{
+            body {{
+                padding: 10px;
+                font-size: 14px;
+            }}
+            
+            .header {{
+                padding: 24px 16px 20px 16px;
+            }}
+            
+            .success-icon {{
+                width: 48px;
+                height: 48px;
+                font-size: 24px;
+                margin-bottom: 16px;
+            }}
+            
+            h1 {{
+                font-size: 22px;
+                line-height: 1.3;
+            }}
+            
+            .subtitle {{
+                font-size: 14px;
+                line-height: 1.4;
+            }}
+            
+            .content {{
+                padding: 20px 16px;
+            }}
+            
+            .appointment-card {{
+                padding: 20px 16px;
+                margin: 20px 0;
+            }}
+            
+            .section-title {{
+                font-size: 16px;
+                margin-bottom: 16px;
+                flex-wrap: wrap;
+            }}
+            
+            .title-accent {{
+                width: 3px;
+                height: 16px;
+                margin-right: 8px;
+            }}
+            
+            .detail-row {{
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                margin: 12px 0;
+                padding: 12px 0;
+            }}
+            
+            .detail-label {{
+                font-size: 13px;
+                margin-bottom: 4px;
+                min-width: auto;
+            }}
+            
+            .detail-value {{
+                text-align: left;
+                font-size: 14px;
+                font-weight: 600;
+                width: 100%;
+            }}
+            
+            .booking-id {{
+                font-size: 12px;
+                padding: 8px 12px;
+                word-break: break-all;
+                line-height: 1.3;
+            }}
+            
+            .tips-list li {{
+                padding: 12px;
+                font-size: 14px;
+                flex-direction: column;
+                align-items: flex-start;
+            }}
+            
+            .tips-list li .icon {{
+                margin-right: 0;
+                margin-bottom: 8px;
+                font-size: 16px;
+            }}
+            
+            .cta-button {{
+                padding: 12px 24px;
+                font-size: 14px;
+                width: auto;
+                display: inline-block;
+            }}
+            
+            .info-box {{
+                padding: 16px;
+                margin: 20px 0;
+            }}
+            
+            .info-content {{
+                font-size: 14px;
+                line-height: 1.4;
+            }}
+            
+            .footer {{
+                padding: 24px 16px;
+                font-size: 13px;
+            }}
+            
+            .footer strong {{
+                font-size: 14px;
+            }}
+        }}
+        
+        /* Extra small screens */
+        @media only screen and (max-width: 400px) {{
+            body {{
+                padding: 8px;
+            }}
+            
+            .container {{
+                border-radius: 8px;
+            }}
+            
+            .header {{
+                padding: 20px 12px 16px 12px;
+            }}
+            
+            .success-icon {{
+                width: 44px;
+                height: 44px;
+                font-size: 22px;
+            }}
+            
+            h1 {{
+                font-size: 20px;
+            }}
+            
+            .content {{
+                padding: 16px 12px;
+            }}
+            
+            .appointment-card {{
+                padding: 16px 12px;
+            }}
+            
+            .section-title {{
+                font-size: 15px;
+            }}
+            
+            .detail-value {{
+                font-size: 13px;
+            }}
+            
+            .booking-id {{
+                font-size: 11px;
+                padding: 6px 10px;
+            }}
+            
+            .tips-list li {{
+                padding: 10px;
+                font-size: 13px;
+            }}
+            
+            .cta-button {{
+                padding: 10px 20px;
+                font-size: 13px;
+            }}
+        }}
     </style>
 </head>
 <body>
@@ -597,9 +776,7 @@ If you need to reschedule or cancel, please contact us at admin@kreyn.ai.
         </div>
     </div>
 </body>
-</html>
-
-        """
+</html>"""
 
 # Global instance
 _scheduling_service = None
