@@ -1,8 +1,8 @@
-# 📅 Scheduling Tool Integration Guide
+# 📅 Simple Scheduling Integration Guide
 
 ## Overview
 
-This document explains how the scheduling tool integration works in the HeyGen-Pipecat conversational AI system. The integration follows a clean separation between AI conversation handling and UI data collection.
+This document explains the simplified scheduling integration in the HeyGen-Pipecat conversational AI system. The integration follows a clean separation between AI conversation handling and UI data collection.
 
 ## Architecture Flow
 
@@ -27,26 +27,18 @@ System processes appointment and sends confirmation email with calendar invite
 
 ## 🛠️ Implementation Details
 
-### LLM Tools Available
+### LLM Tool Available
 
-#### `show_scheduling_popup` (Primary Tool)
+#### `show_scheduling_popup` (Only Tool)
 - **Purpose**: Opens scheduling UI popup
 - **When to use**: When user wants to schedule anything
 - **Parameters**:
   - `service_type`: consultation, demo, onboarding, support, training
   - `context`: Brief description (optional)
 
-#### `check_availability` (Utility Tool)
-- **Purpose**: Check specific time slot availability
-- **When to use**: Only if user asks about a specific time
-- **Parameters**: date, time, service_type
+> **Note**: Availability checking and slot listing tools have been removed for simplicity. The popup handles all scheduling logic.
 
-#### `get_available_slots` (Utility Tool)
-- **Purpose**: Get all available slots for a date
-- **When to use**: Only if user asks for available times
-- **Parameters**: date, service_type
-
-### RTVI Actions Available
+### RTVI Action Available
 
 #### `scheduling.schedule_appointment`
 - **Purpose**: Process scheduling data from frontend
@@ -70,21 +62,21 @@ System processes appointment and sends confirmation email with calendar invite
 ### ❌ DON'T:
 - Ask for date/time/email through conversation
 - Try to collect scheduling details via voice/chat
-- Use other tools unless specifically requested
 - Overcomplicate the process
 
 ## 📨 Email Integration
 
 ### Features:
-- Beautiful HTML email templates
+- Beautiful HTML email templates with Claude theme colors
+- Modern rounded design with orange gradient
 - Calendar invite (.ics) attachment
 - Professional branding
 - Booking confirmation details
-- Instructions for users
+- Clean, readable layout
 
 ### Configuration:
 - Requires `RESEND_API_KEY` in environment
-- Uses `noreply@heygen.com` as sender
+- Uses `admin@kreyn.ai` as sender
 - Includes booking ID for tracking
 
 ## 🔧 Configuration Required
@@ -108,9 +100,9 @@ icalendar>=6.0.0
 rtvi.on('message', (message) => {
   if (message.type === 'ui_update' && 
       message.component_id === 'scheduling_popup' &&
-      message.ui_action === 'show_popup') {
+      message.action === 'show_popup') {
     // Show your scheduling form
-    showSchedulingPopup(message.payload);
+    showSchedulingPopup(message.data);
   }
 });
 ```
@@ -165,17 +157,6 @@ rtvi.on('actionResponse', (response) => {
 - 30-minute time slots
 - 60-minute default duration
 
-## 📋 Message Protocol Flow
-
-The system uses the standardized `messaging/protocol.py` for all communications:
-
-1. **Tool Call Start**: When LLM calls scheduling tool
-2. **UI Update**: Trigger popup display
-3. **Process Start**: Begin scheduling workflow
-4. **Process Steps**: Validate → Check Availability → Create Calendar → Send Email
-5. **Process Complete**: Finish with results
-6. **Agent State**: Update user on progress
-
 ## 🧪 Testing
 
 ### Manual Test Flow:
@@ -224,10 +205,6 @@ The system uses the standardized `messaging/protocol.py` for all communications:
 **AI**: *Calls show_scheduling_popup with service_type="demo"*
 **Result**: Popup appears ready for date/time selection
 
-**User**: "What times are available on Friday?"
-**AI**: *Calls get_available_slots tool*
-**Result**: Shows available time slots
-
 ## 🎯 Success Metrics
 
 A successful integration should achieve:
@@ -237,14 +214,6 @@ A successful integration should achieve:
 - ✅ Clear confirmation and error messaging
 - ✅ Professional appearance and branding
 
-## 📞 Support
-
-For implementation questions or issues:
-- Check the logs for detailed error messages
-- Verify environment variables are set correctly
-- Ensure all dependencies are installed
-- Test with simple scheduling scenarios first
-
 ---
 
-*This integration provides a seamless scheduling experience that leverages AI for natural conversation while maintaining a clean UI for data collection.*
+*This simplified integration provides a seamless scheduling experience that leverages AI for natural conversation while maintaining a clean UI for data collection.*

@@ -1,19 +1,16 @@
 """
-RTVI action for handling scheduling data from frontend.
+Simple RTVI action for handling scheduling data from frontend.
 """
 
-import asyncio
 from loguru import logger
 from typing import Dict, Any
 
 from services.scheduling_service import get_scheduling_service, SchedulingRequest
-from messaging.protocol import create_agent_state
 
 
 async def handle_schedule_appointment(processor, service, arguments):
     """
     Handle scheduling appointment with data from frontend.
-    This is called when the frontend sends scheduling data after user fills the popup.
     
     Expected arguments:
     - email: User's email address
@@ -44,15 +41,6 @@ async def handle_schedule_appointment(processor, service, arguments):
                 "error": "Missing required fields: email, date, or time"
             }
         
-        # Send agent state update
-        from services.message_service import get_message_service
-        message_service = get_message_service()
-        await message_service.send_message(
-            create_agent_state("thinking", {
-                "message": "Processing your appointment request..."
-            })
-        )
-        
         # Create scheduling request
         scheduling_request = SchedulingRequest(
             email=email,
@@ -68,21 +56,7 @@ async def handle_schedule_appointment(processor, service, arguments):
         scheduling_service = get_scheduling_service()
         result = await scheduling_service.schedule_appointment(scheduling_request)
         
-        # Send agent state update
-        if result.success:
-            await message_service.send_message(
-                create_agent_state("speaking", {
-                    "message": "Great! Your appointment has been scheduled and confirmation email sent."
-                })
-            )
-        else:
-            await message_service.send_message(
-                create_agent_state("speaking", {
-                    "message": f"Sorry, there was an issue scheduling your appointment: {result.error_message}"
-                })
-            )
-        
-        # Return result
+        # Return simple result
         return {
             "success": result.success,
             "booking_id": result.booking_id,

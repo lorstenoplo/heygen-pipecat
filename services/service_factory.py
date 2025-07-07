@@ -7,6 +7,7 @@ from config.settings import settings
 from heygen import HeyGenVideoService
 from heygen_client import AvatarQuality, HeyGenClient, NewSessionRequest
 from pipecat.services.openai import OpenAILLMService
+from pipecat.services.llm_service import FunctionCallParams
 from pipecat.services.elevenlabs import ElevenLabsTTSService
 from pipecat.services.deepgram import DeepgramSTTService, LiveOptions, DeepgramTTSService
 from pipecat.processors.aggregators.openai_llm_context import OpenAILLMContext
@@ -79,11 +80,9 @@ class ServiceFactory:
             model="gpt-4o",
         )
         
-        # Register scheduling functions
-        from tools.scheduling_tools import show_scheduling_popup, check_availability, get_available_slots
-        llm.register_function("show_scheduling_popup", show_scheduling_popup)
-        llm.register_function("check_availability", check_availability)
-        llm.register_function("get_available_slots", get_available_slots)
+        # Register scheduling functions using new direct method
+        from tools.scheduling_tools import show_scheduling_popup
+        llm.register_direct_function(show_scheduling_popup)
         
         return llm
     
@@ -96,7 +95,7 @@ class ServiceFactory:
         # Define scheduling tools schema
         show_popup_function = FunctionSchema(
             name="show_scheduling_popup",
-            description="MAIN SCHEDULING TOOL: Display a scheduling popup when user wants to book an appointment. This opens a UI form where the user will enter their email, date, and time. DO NOT ask for date/time/email through conversation - just call this tool.",
+            description="Opens a scheduling popup when user wants to book an appointment. Use this when user wants to schedule anything. DO NOT ask for date/time/email through conversation - just call this tool.",
             properties={
                 "service_type": {
                     "type": "string",
@@ -111,45 +110,7 @@ class ServiceFactory:
             required=["service_type"]
         )
         
-        check_availability_function = FunctionSchema(
-            name="check_availability",
-            description="Check if a specific date and time slot is available. Only use if user specifically asks about a particular time slot.",
-            properties={
-                "date": {
-                    "type": "string",
-                    "description": "Date in YYYY-MM-DD format"
-                },
-                "time": {
-                    "type": "string",
-                    "description": "Time in HH:MM format (24-hour)"
-                },
-                "service_type": {
-                    "type": "string",
-                    "enum": ["consultation", "demo", "onboarding", "support", "training"],
-                    "description": "Type of service"
-                }
-            },
-            required=["date", "time"]
-        )
-        
-        get_slots_function = FunctionSchema(
-            name="get_available_slots", 
-            description="Get all available time slots for a specific date. Only use if user specifically asks for available times on a particular date.",
-            properties={
-                "date": {
-                    "type": "string",
-                    "description": "Date in YYYY-MM-DD format"
-                },
-                "service_type": {
-                    "type": "string",
-                    "enum": ["consultation", "demo", "onboarding", "support", "training"],
-                    "description": "Type of service"
-                }
-            },
-            required=["date"]
-        )
-        
-        tools = ToolsSchema(standard_tools=[show_popup_function, check_availability_function, get_slots_function])
+        tools = ToolsSchema(standard_tools=[show_popup_function])
         
         messages = [
             {
