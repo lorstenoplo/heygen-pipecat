@@ -1,97 +1,184 @@
-"""
-Main application entry point for the HeyGen-Pipecat conversational AI.
+#
+# Copyright (c) 2024–2025, Daily
+#
+# SPDX-License-Identifier: BSD 2-Clause License
+#
+
+"""Pipecat HeyGen Video Bot Example.
+
+The example runs a voice AI bot with HeyGen video avatars that you can connect to using your
+browser and speak with it.
+
+Required AI services:
+- Deepgram (Speech-to-Text)
+- OpenAI (LLM)
+- ElevenLabs (Text-to-Speech)
+- HeyGen (Video Avatar)
+
+The example connects between client and server using transport services.
+
+Run the bot using::
+
+    python main.py
 """
 
-import asyncio
-import sys
+import os
+
 import aiohttp
 from dotenv import load_dotenv
 from loguru import logger
-from pipecat.pipeline.runner import PipelineRunner
 
-from runner import configure
-from services.service_factory import ServiceFactory
-from services.follow_up_service import OpenAIFollowUpProcessor
-from handlers.event_handlers import EventHandlers
-from config.pipeline_config import PipelineConfig
+from pipecat.audio.vad.silero import SileroVADAnalyzer
+from pipecat.pipeline.pipeline import Pipeline
+from pipecat.pipeline.runner import PipelineRunner
+from pipecat.pipeline.task import PipelineParams, PipelineTask
+from pipecat.processors.aggregators.openai_llm_context import OpenAILLMContext
+from pipecat.runner.types import RunnerArguments
+from pipecat.runner.utils import create_transport
+from pipecat.services.elevenlabs.tts import ElevenLabsTTSService
+from pipecat.services.deepgram.stt import DeepgramSTTService
+from pipecat.services.openai.llm import OpenAILLMService
+from pipecat.services.heygen.video import HeyGenVideoService
+from pipecat.transports.base_transport import BaseTransport
+from pipecat.transports.services.daily import DailyParams
 
 load_dotenv(override=True)
 
-logger.remove(0)
-logger.add(sys.stderr, level="DEBUG")
+# We store functions so objects (e.g. SileroVADAnalyzer) don't get
+# instantiated. The function will be called when the desired transport gets
+# selected.
+transport_params = {
+    "daily": lambda: DailyParams(
+        audio_in_enabled=True,
+        audio_out_enabled=True,
+        video_out_enabled=True,
+        video_out_is_live=True,
+        video_out_width=1280,
+        video_out_height=720,
+        vad_analyzer=SileroVADAnalyzer(),
+    ),
+}
 
 
-async def main():
-    """Main application entry point."""
+async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
+    logger.info(f"Starting bot")
     async with aiohttp.ClientSession() as session:
-        try:
-            # Configure room and token
-            room, token = await configure(session)
-            logger.info(f"Room configured: {room}")
+        stt = DeepgramSTTService(api_key=os.getenv("DEEPGRAM_API_KEY"))
 
-            # Create services
-            transport = ServiceFactory.create_transport(room, token)
-            stt = ServiceFactory.create_stt_service()
-            tts = ServiceFactory.create_tts_service()
-            llm = ServiceFactory.create_llm_service()
-            
-            # Create HeyGen services
-            heygen_client = await ServiceFactory.create_heygen_client(session)
-            session_response = await ServiceFactory.create_heygen_session(heygen_client)
-            heygen_video_service = await ServiceFactory.create_heygen_video_service(session_response, session)
+        tts = ElevenLabsTTSService(
+            api_key=os.getenv("ELEVENLABS_API_KEY"),
+            voice_id="21m00Tcm4TlvDq8ikWAM",
+        )
 
-            # Create context and processors
-            context = ServiceFactory.create_llm_context()
-            context_aggregator = llm.create_context_aggregator(context)
-            
-            rtvi = ServiceFactory.create_rtvi_processor()
-            transcript = ServiceFactory.create_transcript_processor()
-            
-            # Create follow-up processor and event handlers
-            follow_up_processor = OpenAIFollowUpProcessor()
-            event_handlers = EventHandlers(follow_up_processor)
+        llm = OpenAILLMService(api_key=os.getenv("OPENAI_API_KEY"))
 
-            # Setup pipeline
-            pipeline = PipelineConfig.create_pipeline(
-                transport, rtvi, stt, transcript, context_aggregator,
-                llm, tts, heygen_video_service
+        heyGen = HeyGenVideoService(api_key=os.getenv("HEYGEN_API_KEY"), session=session)
+
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant. Your output will be converted to audio so don't include special characters in your answers. Be succinct and respond to what the user said in a creative and helpful way.",
+            },
+        ]
+
+        context = OpenAILLMContext(messages)
+        context_aggregator = llm.create_context_aggregator(context)
+
+        pipeline = Pipeline(
+            [
+                transport.input(),  # Transport user input
+                stt,  # STT
+                context_aggregator.user(),  # User responses
+                llm,  # LLM
+                tts,  # TTS
+                heyGen,  # Avatar
+                transport.output(),  # Transport bot output
+                context_aggregator.assistant(),  # Assistant spoken responses
+            ]
+        )
+
+        task = PipelineTask(
+            pipeline,
+            params=PipelineParams(
+                enable_metrics=True,
+                enable_usage_metrics=True,
+            ),
+            idle_timeout_secs=runner_args.pipeline_idle_timeout_secs,
+        )
+
+        @transport.event_handler("on_client_connected")
+        async def on_client_connected(transport, client):
+            logger.info(f"Client connected")
+            # Kick off the conversation.
+            messages.append(
+                {
+                    "role": "system",
+                    "content": "Start by saying 'Hello' and then a short greeting.",
+                }
             )
-            
-            task = PipelineConfig.create_task(pipeline, rtvi)
-            
-            # Setup RTVI actions and pipeline manager
-            PipelineConfig.setup_rtvi_actions(rtvi)
-            PipelineConfig.setup_pipeline_manager(rtvi, task, context_aggregator)
+            await task.queue_frames([context_aggregator.user().get_context_frame()])
 
-            # Register event handlers using the correct method names
-            transport.add_event_handler("on_client_connected", event_handlers.on_client_connected)
-            transport.add_event_handler("on_client_disconnected", event_handlers.on_client_disconnected)
-            transport.add_event_handler("on_first_participant_joined", event_handlers.on_first_participant_joined)
-            transport.add_event_handler("on_participant_left", 
-                lambda transport, participant, reason: event_handlers.on_participant_left(
-                    transport, participant, reason, heygen_client, session_response.session_id
-                ))
-            transport.add_event_handler("on_call_state_updated", event_handlers.on_call_state_updated)
-            transport.add_event_handler("on_participant_video_started", event_handlers.on_participant_video_started)
-            transport.add_event_handler("on_participant_video_stopped", event_handlers.on_participant_video_stopped)
-            
-            # Use the event_handler decorator for transcript
-            @transcript.event_handler("on_transcript_update")
-            async def handle_transcript_update(processor, frame):
-                await event_handlers.handle_transcript_update(processor, frame)
-            
-            @rtvi.event_handler("on_client_ready")
-            async def on_client_ready(rtvi_instance):
-                await event_handlers.on_client_ready(rtvi_instance)
+        @transport.event_handler("on_client_disconnected")
+        async def on_client_disconnected(transport, client):
+            logger.info(f"Client disconnected")
+            await task.cancel()
 
-            logger.info("Starting pipeline runner...")
-            runner = PipelineRunner()
-            await runner.run(task)
+        runner = PipelineRunner(handle_sigint=runner_args.handle_sigint)
 
-        except Exception as e:
-            logger.error(f"Main execution error: {e}")
-            raise
+        await runner.run(task)
+
+
+async def bot(runner_args: RunnerArguments):
+    """Main bot entry point compatible with Pipecat Cloud."""
+    transport = await create_transport(runner_args, transport_params)
+    await run_bot(transport, runner_args)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    import argparse
+    import sys
+    import asyncio
+    
+    # Check if we have daily-specific arguments (-u for room URL, -t for token)
+    if '-u' in sys.argv and '-t' in sys.argv:
+        # Extract room URL and token from command line
+        url_index = sys.argv.index('-u') + 1
+        token_index = sys.argv.index('-t') + 1
+        room_url = sys.argv[url_index]
+        token = sys.argv[token_index]
+        
+        # Set environment variables for direct Daily connection
+        os.environ['DAILY_SAMPLE_ROOM_URL'] = room_url
+        os.environ['DAILY_SAMPLE_ROOM_TOKEN'] = token
+        
+        # Remove these arguments and use direct mode
+        sys.argv = [arg for i, arg in enumerate(sys.argv) 
+                   if arg not in ['-u', '-t'] and i not in [url_index, token_index]]
+        sys.argv.extend(['-d'])  # Add --direct flag for Daily direct connection
+    
+    # Intercept command line arguments and force daily transport
+    # Remove any transport arguments that aren't daily and set to daily
+    filtered_args = []
+    i = 0
+    while i < len(sys.argv):
+        arg = sys.argv[i]
+        if arg in ['-t', '--transport']:
+            # Skip the transport argument and its value, we'll add daily later
+            if i + 1 < len(sys.argv) and not sys.argv[i + 1].startswith('-'):
+                i += 1  # Skip the value too
+        elif arg.startswith('--transport='):
+            # Skip --transport=value format
+            pass
+        else:
+            filtered_args.append(arg)
+        i += 1
+    
+    # Update sys.argv with filtered arguments
+    sys.argv = filtered_args
+    
+    # Add daily transport as default if no direct mode
+    if '-d' not in sys.argv and '--direct' not in sys.argv:
+        sys.argv.extend(['-t', 'daily'])
+    
+    from pipecat.runner.run import main
+    main()
